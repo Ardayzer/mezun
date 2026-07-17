@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Mezuniyetin Kutlu Olsun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Caveat:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
+<style>
+  :root{
+    --cream:#FBF1EC; --paper:#FFF9F4; --rose:#E7B2B8; --rose-deep:#C97B86;
+    --plum:#5C2A3A; --ink:#3A2230; --gold:#C7962E; --gold-light:#E8CE93; --sage:#93A382;
+    --pcb-bg:#0B1F1A; --pcb-trace:#3ED9A0; --pcb-trace-dim:#1E6B50;
+    --shadow: 0 20px 60px rgba(92,42,58,0.15);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; font-family:'Jost', sans-serif; background:var(--cream); color:var(--ink); overflow-x:hidden; }
+  h1,h2,h3, .display{ font-family:'Fraunces', serif; color:var(--plum); margin:0; }
+  .script{ font-family:'Caveat', cursive; }
+  section{ position:relative; width:100%; }
+  .center-col{ max-width:640px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- LOCK GATE ---------- */
+  #gate{
+    min-height:100svh; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(231,178,184,0.35), transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(199,150,46,0.18), transparent 45%),
+      var(--cream);
+    padding:32px 20px; text-align:center; transition:opacity .8s ease, visibility .8s ease;
+  }
+  #gate.hidden{ opacity:0; visibility:hidden; pointer-events:none; position:fixed; inset:0; }
+  .gate-card{ max-width:480px; }
+  .eyebrow{ font-family:'Jost',sans-serif; letter-spacing:.22em; text-transform:uppercase; font-size:12px; color:var(--rose-deep); font-weight:500; margin-bottom:10px; display:block; }
+  .gate-card h1{ font-size:clamp(26px,6vw,36px); font-weight:600; line-height:1.25; }
+  .gate-sub{ margin-top:12px; font-size:15px; opacity:.75; line-height:1.6; }
+  .gate-grid{ display:grid; grid-template-columns:repeat(2,1fr); grid-auto-rows:1fr; gap:14px; margin-top:32px; }
+  .gate-photo{ aspect-ratio:1/1; border-radius:18px; overflow:hidden; border:3px solid rgba(92,42,58,0.08); cursor:pointer; background:#fff; position:relative; transition:transform .25s ease, border-color .25s ease; }
+  .gate-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .gate-photo:hover{ transform:translateY(-4px); }
+  .gate-photo.wrong{ animation:shake .5s ease; border-color:var(--rose-deep); }
+  .gate-photo.correct{ border-color:var(--sage); transform:scale(1.04); }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
+  .gate-msg{ min-height:24px; margin-top:18px; font-size:14px; color:var(--rose-deep); font-weight:500; }
+
+  /* ---------- CIRCUIT REVEAL ---------- */
+  #circuit-reveal{
+    position:fixed; inset:0; background:var(--pcb-bg); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:22px; z-index:60; padding:28px;
+    opacity:0; visibility:hidden; transition:opacity .6s ease, visibility .6s ease;
+  }
+  #circuit-reveal.show{ opacity:1; visibility:visible; }
+  .circuit-wrap{ position:relative; width:min(92vw,440px); aspect-ratio:4/3; }
+  .circuit-wrap svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .circuit-path{ fill:none; stroke:var(--pcb-trace-dim); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:900; stroke-dashoffset:900; }
+  #circuit-reveal.active .circuit-path{ stroke:var(--pcb-trace); animation:draw 1.1s ease forwards; filter:drop-shadow(0 0 4px rgba(62,217,160,0.8)); }
+  #circuit-reveal.active .cp-1{ animation-delay:0s; }
+  #circuit-reveal.active .cp-2{ animation-delay:.12s; }
+  #circuit-reveal.active .cp-3{ animation-delay:.24s; }
+  #circuit-reveal.active .cp-4{ animation-delay:.36s; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .circuit-node{ fill:var(--pcb-trace-dim); }
+  #circuit-reveal.active .circuit-node{ fill:var(--gold-light); animation:pulseNode 1.6s ease infinite; }
+  @keyframes pulseNode{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+  .circuit-chip{ fill:#122E27; stroke:var(--pcb-trace-dim); stroke-width:2; }
+  #circuit-reveal.active .circuit-chip{ stroke:var(--pcb-trace); }
+
+  /* photo frames overlaid on top of the svg */
+  .circuit-pic{
+    position:absolute; transform:translate(-50%,-50%);
+    border-radius:50%; overflow:hidden; background:#0e2a24;
+    border:2px solid var(--pcb-trace-dim); box-shadow:0 0 0 4px rgba(11,31,26,0.6);
+    transition:border-color .4s ease;
+  }
+  .circuit-pic img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .circuit-pic.corner{ width:15%; aspect-ratio:1/1; }
+  #circuit-reveal.active .circuit-pic.corner{ border-color:var(--pcb-trace); }
+  .circuit-pic.pic-tl{ left:5%; top:20%; }
+  .circuit-pic.pic-bl{ left:5%; top:80%; }
+  .circuit-pic.pic-tr{ left:95%; top:20%; }
+  .circuit-pic.pic-br{ left:95%; top:80%; }
+  .circuit-pic.center{
+    left:50%; top:50%; width:23%; aspect-ratio:1/1; border-radius:22%;
+    border-color:var(--pcb-trace-dim); opacity:.35; transform:translate(-50%,-50%) scale(.7);
+    transition:transform .6s cubic-bezier(.34,1.56,.64,1), opacity .6s ease, box-shadow .6s ease;
+  }
+  .circuit-pic.center.revealed{
+    opacity:1; transform:translate(-50%,-50%) scale(1);
+    border-color:var(--gold-light);
+    box-shadow:0 0 0 4px rgba(11,31,26,0.6), 0 0 30px 6px rgba(232,206,147,0.55);
+  }
+
+  /* traveling sparks */
+  .spark{
+    position:absolute; width:10px; height:10px; margin:-5px; border-radius:50%;
+    background:var(--gold-light); box-shadow:0 0 10px 3px rgba(232,206,147,0.9);
+    opacity:0;
+  }
+  #circuit-reveal.active .spark-tl{ left:5%; top:20%; animation:sparkTL 1.1s ease forwards; animation-delay:0s; }
+  #circuit-reveal.active .spark-bl{ left:5%; top:80%; animation:sparkBL 1.1s ease forwards; animation-delay:.12s; }
+  #circuit-reveal.active .spark-tr{ left:95%; top:20%; animation:sparkTR 1.1s ease forwards; animation-delay:.24s; }
+  #circuit-reveal.active .spark-br{ left:95%; top:80%; animation:sparkBR 1.1s ease forwards; animation-delay:.36s; }
+  @keyframes sparkTL{ 0%{ left:5%; top:20%; opacity:1;} 100%{ left:50%; top:50%; opacity:0;} }
+  @keyframes sparkBL{ 0%{ left:5%; top:80%; opacity:1;} 100%{ left:50%; top:50%; opacity:0;} }
+  @keyframes sparkTR{ 0%{ left:95%; top:20%; opacity:1;} 100%{ left:50%; top:50%; opacity:0;} }
+  @keyframes sparkBR{ 0%{ left:95%; top:80%; opacity:1;} 100%{ left:50%; top:50%; opacity:0;} }
+
+  .circuit-caption{ font-family:'Caveat',cursive; font-size:24px; color:var(--gold-light); opacity:0; transition:opacity .6s ease; text-align:center; }
+  .circuit-caption.show{ opacity:1; }
+  .circuit-status{ color:var(--pcb-trace); font-family:'Jost',sans-serif; font-size:13px; letter-spacing:.15em; text-transform:uppercase; opacity:0; transition:opacity .6s ease; }
+  .circuit-status.show{ opacity:1; }
+  .circuit-continue{
+    background:none; border:1.5px solid var(--pcb-trace); color:var(--pcb-trace);
+    padding:12px 30px; border-radius:30px; font-family:'Jost',sans-serif; font-size:13px;
+    letter-spacing:.05em; cursor:pointer; opacity:0; pointer-events:none;
+    transition:opacity .6s ease, background .25s ease, color .25s ease;
+  }
+  .circuit-continue.show{ opacity:1; pointer-events:auto; }
+  .circuit-continue:hover{ background:var(--pcb-trace); color:var(--pcb-bg); }
+
+  /* ---------- HERO ---------- */
+  #hero{ min-height:100svh; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:60px 24px; background:linear-gradient(180deg, var(--cream) 0%, #FDF6F1 100%); }
+  #hero .script{ font-size:clamp(48px,12vw,84px); color:var(--rose-deep); line-height:1; }
+  #hero h1{ font-size:clamp(30px,7vw,52px); font-weight:700; margin-top:8px; letter-spacing:-.01em; }
+  #hero p{ max-width:420px; margin:18px auto 0; opacity:.75; font-size:16px; line-height:1.7; }
+  .scroll-cue{ margin-top:56px; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--plum); opacity:.5; animation:bob 2.2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
+
+  /* ---------- GIFT BOX ---------- */
+  #gift{ padding:100px 0 120px; background:linear-gradient(180deg,#FDF6F1 0%, var(--rose) 140%); display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .section-head{ text-align:center; margin-bottom:20px; }
+  .section-head h2{ font-size:clamp(26px,5vw,38px); font-weight:600; }
+  #gift .section-head p{ max-width:380px; margin:0 auto; opacity:.75; font-size:15px; line-height:1.6; }
+  .box-wrap{ margin-top:40px; cursor:pointer; position:relative; width:180px; height:150px; }
+  .box-lid{ position:absolute; top:0; left:-8px; right:-8px; height:36px; background:var(--rose-deep); border-radius:10px 10px 4px 4px; box-shadow:0 8px 16px rgba(92,42,58,0.2); transform-origin:left center; transition:transform .6s cubic-bezier(.34,1.56,.64,1); z-index:3; }
+  .box-base{ position:absolute; bottom:0; left:0; right:0; height:114px; background:var(--plum); border-radius:6px 6px 12px 12px; box-shadow:var(--shadow); }
+  .ribbon-v{ position:absolute; top:0; bottom:0; left:50%; width:18px; margin-left:-9px; background:var(--gold); z-index:2; }
+  .ribbon-h{ position:absolute; left:0; right:0; top:32px; height:18px; background:var(--gold); z-index:4; }
+  .bow{ position:absolute; top:12px; left:50%; width:46px; height:30px; margin-left:-23px; z-index:5; transition:transform .5s ease, opacity .5s ease; }
+  .bow svg{ width:100%; height:100%; }
+  .box-wrap.open .box-lid{ transform:rotateX(-115deg) translateY(-6px); }
+  .box-wrap.open .bow{ opacity:0; transform:translateY(-20px) rotate(20deg) scale(.8); }
+  .box-hint{ margin-top:22px; font-size:13px; color:var(--plum); opacity:.6; letter-spacing:.05em; }
+
+  /* ---------- LETTER MODAL ---------- */
+  #letter-overlay{ position:fixed; inset:0; background:rgba(58,34,48,0.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px; z-index:50; opacity:0; visibility:hidden; transition:opacity .4s ease, visibility .4s ease; }
+  #letter-overlay.show{ opacity:1; visibility:visible; }
+  .letter-paper{ background:var(--paper); max-width:480px; width:100%; max-height:82vh; overflow-y:auto; border-radius:6px; padding:44px 36px 36px; box-shadow:0 30px 80px rgba(0,0,0,0.35); position:relative; transform:scale(.85) translateY(30px); transition:transform .5s cubic-bezier(.34,1.56,.64,1); }
+  #letter-overlay.show .letter-paper{ transform:scale(1) translateY(0); }
+  .seal{ width:52px;height:52px; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 70%); margin:0 auto 20px; display:flex;align-items:center;justify-content:center; box-shadow:0 4px 10px rgba(199,150,46,0.4); font-family:'Fraunces',serif; color:var(--paper); font-size:20px; font-weight:700; }
+  .letter-paper h3{ text-align:center; font-size:22px; font-weight:600; }
+  .letter-body{ margin-top:22px; font-size:15.5px; line-height:1.85; white-space:pre-line; }
+  .letter-sign{ margin-top:24px; text-align:right; font-family:'Caveat',cursive; font-size:26px; color:var(--rose-deep); }
+  .letter-close{ display:block; margin:28px auto 0; background:none; border:1.5px solid var(--plum); color:var(--plum); padding:10px 26px; border-radius:30px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:.05em; cursor:pointer; transition:background .25s ease, color .25s ease; }
+  .letter-close:hover{ background:var(--plum); color:var(--paper); }
+
+  /* ---------- CLOSING ---------- */
+  #closing{ min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:80px 24px; background:linear-gradient(180deg, var(--cream), #F6E4D9); }
+  #closing .script{ font-size:clamp(30px,7vw,44px); color:var(--rose-deep); }
+  #closing p{ max-width:380px; margin:16px auto 0; font-size:15px; line-height:1.7; opacity:.75; }
+  .replay-btn{ margin-top:30px; background:var(--plum); color:var(--paper); border:none; padding:13px 30px; border-radius:30px; font-family:'Jost',sans-serif; font-size:13px; letter-spacing:.05em; cursor:pointer; }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--rose); border-radius:10px; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOCK GATE ============ -->
+<section id="gate">
+  <div class="gate-card">
+    <span class="eyebrow">Bu site sana özel</span>
+    <h1>Girebilmek için<br>beni bulman lazım 💛</h1>
+    <p class="gate-sub">Aşağıdaki dört fotoğraftan bize ait olanı seç.</p>
+    <div class="gate-grid" id="gateGrid"></div>
+    <div class="gate-msg" id="gateMsg"></div>
+  </div>
+</section>
+
+<!-- ============ CIRCUIT REVEAL ============ -->
+<div id="circuit-reveal">
+  <div class="circuit-wrap">
+    <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+      <path class="circuit-path cp-1" d="M20 60 H120 V120 H155"/>
+      <path class="circuit-path cp-2" d="M20 240 H120 V180 H155"/>
+      <path class="circuit-path cp-3" d="M380 60 H280 V120 H245"/>
+      <path class="circuit-path cp-4" d="M380 240 H280 V180 H245"/>
+      <circle class="circuit-node" cx="20" cy="60" r="5"/>
+      <circle class="circuit-node" cx="20" cy="240" r="5"/>
+      <circle class="circuit-node" cx="380" cy="60" r="5"/>
+      <circle class="circuit-node" cx="380" cy="240" r="5"/>
+      <circle class="circuit-node" cx="120" cy="120" r="4"/>
+      <circle class="circuit-node" cx="120" cy="180" r="4"/>
+      <circle class="circuit-node" cx="280" cy="120" r="4"/>
+      <circle class="circuit-node" cx="280" cy="180" r="4"/>
+      <rect class="circuit-chip" x="155" y="105" width="90" height="90" rx="14"/>
+    </svg>
+
+    <div class="circuit-pic corner pic-tl"><img src="pic1.jpg" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#1E6B50,#0e2a24)'; this.remove();"></div>
+    <div class="circuit-pic corner pic-bl"><img src="pic2.jpg" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#1E6B50,#0e2a24)'; this.remove();"></div>
+    <div class="circuit-pic corner pic-tr"><img src="pic3.jpg" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#1E6B50,#0e2a24)'; this.remove();"></div>
+    <div class="circuit-pic corner pic-br"><img src="pic4.jpg" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#1E6B50,#0e2a24)'; this.remove();"></div>
+    <div class="circuit-pic center" id="centerPic"><img src="pic5.jpg" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#1E6B50,#0e2a24)'; this.remove();"></div>
+
+    <div class="spark spark-tl"></div>
+    <div class="spark spark-bl"></div>
+    <div class="spark spark-tr"></div>
+    <div class="spark spark-br"></div>
+  </div>
+  <div class="circuit-caption" id="circuitCaption"></div>
+  <div class="circuit-status" id="circuitStatus">Bağlantı Tamamlandı ✓</div>
+  <button class="circuit-continue" id="circuitContinue">Devam Et →</button>
+</div>
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <span class="eyebrow">Bugün senin günün</span>
+  <div class="script" id="heroName">Aşkım</div>
+  <h1>Mezuniyetin Kutlu Olsun</h1>
+  <p>Yıllarca verdiğin emeğin, gösterdiğin sabrın karşılığını bugün alıyorsun. Ve ben bunu senin yanında görebildiğim için çok şanslıyım.</p>
+  <div class="scroll-cue">aşağı kaydır ↓</div>
+</section>
+
+<!-- ============ GIFT BOX ============ -->
+<section id="gift">
+  <div class="center-col section-head">
+    <span class="eyebrow">Küçük bir sürpriz</span>
+    <h2>Sana bir mektup bıraktım</h2>
+    <p>Kutuyu açmak için üstüne dokun.</p>
+  </div>
+  <div class="box-wrap" id="boxWrap">
+    <div class="bow">
+      <svg viewBox="0 0 46 30">
+        <path d="M23 15 C10 2, 2 6, 4 15 C2 24, 10 28, 23 15 Z" fill="#C7962E"/>
+        <path d="M23 15 C36 2, 44 6, 42 15 C44 24, 36 28, 23 15 Z" fill="#C7962E"/>
+        <circle cx="23" cy="15" r="5" fill="#E8CE93"/>
+      </svg>
+    </div>
+    <div class="ribbon-v"></div>
+    <div class="ribbon-h"></div>
+    <div class="box-lid"></div>
+    <div class="box-base"></div>
+  </div>
+  <div class="box-hint">kutuya dokun</div>
+</section>
+
+<!-- ============ LETTER MODAL ============ -->
+<div id="letter-overlay">
+  <div class="letter-paper">
+    <div class="seal">✦</div>
+    <h3>Sana Bir Mektup</h3>
+    <div class="letter-body" id="letterBody"></div>
+    <div class="letter-sign" id="letterSign"></div>
+    <button class="letter-close" id="letterClose">Mektubu Kapat</button>
+  </div>
+</div>
+
+<!-- ============ CLOSING ============ -->
+<section id="closing">
+  <div class="script">Seninle gurur duyuyorum</div>
+  <p>Bugün bir başlangıç. Önümüzdeki her yeni günde de yanında olacağım.</p>
+  <button class="replay-btn" id="replayBtn">Kutlamayı Tekrar Başlat 🎉</button>
+</section>
+
+<script>
+/* =========================================================
+   BURADAN DÜZENLE — kolayca kişiselleştir
+   ========================================================= */
+const CONFIG = {
+  herName: "Aşkım",          // Sevgilinin adını buraya yaz
+  yourName: "Ben",           // Mektubun altına imza olarak yazılacak isim
+
+  // Kilit ekranında gösterilecek 4 fotoğraf, SIRALAMA SABİT (karışmaz).
+  gatePhotos: [
+    { src: "Resim2.jpg", correct: false },
+    { src: "Resim3.jpg", correct: false },
+    { src: "Resim1.jpg", correct: true  },
+    { src: "Resim4.jpg", correct: false }
+  ],
+
+  letterText: `Sevgili {isim},
+
+Bugün sadece bir diploma günü değil; yıllarca süren emeğinin, sabrının ve inadının karşılığını aldığın gün.
+
+Seni tanıdığım günden beri, önüne çıkan her engelde küçülmek yerine büyüdüğünü gördüm. Uykusuz geçen gecelerini, bitmek bilmeyen ödevlerini, kendine bile zaman ayıramadığın o yoğun dönemleri en yakınından izleme şansı bulduğum için kendimi çok şanslı hissediyorum.
+
+Bugün karşımda duran kişi, hayallerinin peşinden koşmaktan asla vazgeçmeyen, zorluklar karşısında yılmayan, her defasında daha güçlü çıkan biri. Seninle sadece aşık olmadım; aynı zamanda sana hayran kaldım. Başardığın her şey, attığın her adım, benim için ayrı bir gurur kaynağı.
+
+Bu mektubu yazarken aklımdan geçen tek şey şu: bundan sonrası da en az bugünkü kadar güzel olacak. Çünkü artık yanımda, hem bugüne kadarki emeğinin karşılığını almış hem de yarına dair hayalleri olan biri var. Ve ben, o hayallerin her birinde yanında olmak istiyorum.
+
+Bugün seninle gurur duyuyorum. Bugün sana aşığım. Ve yarın, öbür gün, önümüzdeki her günde de seninle olmayı diliyorum.
+
+Nice mutlu yıllara aşkım. Seni çok seviyorum.`
+};
+
+/* ========================================================= */
+
+document.getElementById('heroName').textContent = CONFIG.herName;
+document.getElementById('circuitCaption').textContent = CONFIG.herName;
+
+// ---- Kilit ekranı (sıralama sabit, karışmaz) ----
+const gateGrid = document.getElementById('gateGrid');
+const gateMsg = document.getElementById('gateMsg');
+
+CONFIG.gatePhotos.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'gate-photo';
+  div.innerHTML = `<img src="${p.src}" alt="" onerror="this.parentElement.style.background='linear-gradient(135deg,#E7B2B8,#C7962E)'; this.remove();">`;
+  div.addEventListener('click', () => {
+    if (p.correct) {
+      div.classList.add('correct');
+      gateMsg.textContent = 'Buldun! 🎉';
+      gateMsg.style.color = '#5C8A5C';
+      setTimeout(() => {
+        document.getElementById('gate').classList.add('hidden');
+        playCircuitReveal();
+      }, 550);
+    } else {
+      div.classList.remove('wrong');
+      void div.offsetWidth;
+      div.classList.add('wrong');
+      gateMsg.textContent = 'Bu değil, tekrar dene 💛';
+      gateMsg.style.color = '#C97B86';
+    }
+  });
+  gateGrid.appendChild(div);
+});
+
+// ---- Devre animasyonu: 4 fotoğraftan elektrik ortadaki fotoğrafta buluşuyor ----
+const circuitReveal = document.getElementById('circuit-reveal');
+const centerPic = document.getElementById('centerPic');
+const circuitCaption = document.getElementById('circuitCaption');
+const circuitStatus = document.getElementById('circuitStatus');
+const circuitContinue = document.getElementById('circuitContinue');
+
+function playCircuitReveal(){
+  circuitReveal.classList.add('show');
+  requestAnimationFrame(() => circuitReveal.classList.add('active'));
+  // sparkler en geç .36s gecikme + 1.1s sürede ortaya ulaşıyor -> ~1.5s sonra ortadaki foto açılır
+  setTimeout(() => {
+    centerPic.classList.add('revealed');
+    circuitCaption.classList.add('show');
+    circuitStatus.classList.add('show');
+    circuitContinue.classList.add('show');
+  }, 1500);
+}
+
+// Devam Et butonuna basılmadan bir sonraki ekrana geçilmez
+circuitContinue.addEventListener('click', () => {
+  circuitReveal.classList.remove('show');
+  circuitReveal.classList.remove('active');
+  fireConfetti();
+});
+
+// ---- Hediye kutusu / mektup ----
+const boxWrap = document.getElementById('boxWrap');
+const letterOverlay = document.getElementById('letter-overlay');
+document.getElementById('letterBody').textContent = CONFIG.letterText.replace('{isim}', CONFIG.herName);
+document.getElementById('letterSign').textContent = 'Sonsuza kadar seninle, ' + CONFIG.yourName;
+
+boxWrap.addEventListener('click', () => {
+  boxWrap.classList.add('open');
+  setTimeout(() => letterOverlay.classList.add('show'), 350);
+});
+document.getElementById('letterClose').addEventListener('click', () => {
+  letterOverlay.classList.remove('show');
+  setTimeout(() => boxWrap.classList.remove('open'), 300);
+});
+letterOverlay.addEventListener('click', (e) => {
+  if (e.target === letterOverlay) letterOverlay.classList.remove('show');
+});
+
+// ---- Konfeti ----
+function fireConfetti(){
+  if (typeof confetti !== 'function') return;
+  const colors = ['#C7962E','#E7B2B8','#5C2A3A','#93A382'];
+  confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 }, colors });
+  setTimeout(() => confetti({ particleCount: 60, spread: 120, origin: { y: 0.4 }, colors }), 300);
+}
+document.getElementById('replayBtn').addEventListener('click', fireConfetti);
+</script>
+</body>
+</html>
